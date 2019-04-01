@@ -25,6 +25,8 @@ if (!file.exists(data_file)) {
         unzip(data_file)
 } 
 
+# decompress the (downloaded) data_file which contains the Data Set for our project
+unzip(data_file)
 
 # Set the Working Directory to the allocated sub-directory for the project's the Data Set  
 setwd(file.path(curr_path, data_path))
@@ -40,13 +42,26 @@ data_subset <-rbind(data_set[data_set$Date=="1/2/2007",],data_set[data_set$Date=
 # transform textual dates into R Date format: dd/mm/yyyy
 data_subset$Date <- as.Date(data_subset$Date, format="%d/%m/%Y")
 
+# join two columns Data and Time into a single column: DateTime
+DateTime <- paste(as.Date(data_subset$Date), data_subset$Time)
+
+#convert Datetime column into POSIXct portable format
+data_subset$Datetime <- as.POSIXct(DateTime)
+
 # initiate a graphics device: PNG file
-png("plot1.png", width=480, height=480)
+png("plot3.png", width=480, height=480)
 
-# plot a Histogram given the generated sub-set of data and specifying x & y Axes, labels and etc.
-hist(data_subset$Global_active_power, main="Global Active Power", 
-     xlab="Global Active Power (KWh)", ylab="Frequency", col="deeppink2")
+# given the current sub-set of data, plot a line graph for Datatime values representing X axis
+# starting with Sub_metering_1 as Y variable...
+with(data_subset, {plot(Sub_metering_1 ~ Datetime, type="l", xlab= "Week Day", ylab="Energy Sub-metering")})
 
+# followed by Sub_metering_2 and Sub_metering_3 as Y values
+lines(data_subset$Sub_metering_2 ~ data_subset$Datetime, col = 'dark red')
+lines(data_subset$Sub_metering_3 ~ data_subset$Datetime, col = 'dark blue')
+
+# make a 'legend' to ensure this graph is oging to readable
+legend("topright", lty=2, lwd =5, col=c("black","dark red","dark blue"),
+       legend=c("Sub_metering_1","Sub_metering_2","Sub_metering_3"))
 
 # close off graphics device which was inititiated previously
 dev.off()
